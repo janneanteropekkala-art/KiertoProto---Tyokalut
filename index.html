@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KiertoProto - Kiertomittari&trade;</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style>
+        .slider { -webkit-appearance: none; width: 100%; height: 8px; border-radius: 5px; background: #e2e8f0; outline: none; }
+        .slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 22px; height: 22px; border-radius: 50%; background: #3b82f6; cursor: pointer; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+    </style>
+</head>
+<body class="bg-slate-50 py-10 px-4 text-slate-800">
+
+    <div class="max-w-xl mx-auto bg-white p-8 rounded-3xl shadow-xl border border-slate-100">
+        <h1 class="text-3xl font-black text-center text-slate-900 mb-2">Kiertomittari&trade;</h1>
+        <p class="text-center text-slate-500 mb-10">Testaa, kuinka hyvin tuote ja kiertotalous kohtaavat. Valitse tuotettasi parhaiten kuvaava väittämä.</p>
+
+        <div class="space-y-8">
+            <div class="space-y-2">
+                <div class="flex justify-between font-bold"><span>1. Purettavuus</span><span id="v1" class="text-blue-600">3</span></div>
+                <input type="range" min="1" max="5" value="3" class="slider" id="q1" oninput="update(1, this.value)">
+                <p id="d1" class="text-[15px] text-slate-600 italic min-h-[45px]">Tuotteen purkaminen onnistuu kohtuullisella työkaluvalikoimalla.</p>
+            </div>
+            
+            <div class="space-y-2">
+                <div class="flex justify-between font-bold"><span>2. Kunnossapito</span><span id="v2" class="text-blue-600">3</span></div>
+                <input type="range" min="1" max="5" value="3" class="slider" id="q2" oninput="update(2, this.value)">
+                <p id="d2" class="text-[15px] text-slate-600 italic min-h-[45px]">Tuotteen pinnat on helppo puhdistaa ja materiaalit kestävät puhdistuksen.</p>
+            </div>
+
+            <div class="space-y-2">
+                <div class="flex justify-between font-bold"><span>3. Uudelleenvalmistus</span><span id="v3" class="text-blue-600">3</span></div>
+                <input type="range" min="1" max="5" value="3" class="slider" id="q3" oninput="update(3, this.value)">
+                <p id="d3" class="text-[15px] text-slate-600 italic min-h-[45px]">Tuote on jaettu moduuleihin, jotka voidaan irrottaa, vaihtaa nopeasti uuteen ja kunnostaa erikseen.</p>
+            </div>
+
+            <div class="space-y-2">
+                <div class="flex justify-between font-bold"><span>4. Kierrätys</span><span id="v4" class="text-blue-600">3</span></div>
+                <input type="range" min="1" max="5" value="3" class="slider" id="q4" oninput="update(4, this.value)">
+                <p id="d4" class="text-[15px] text-slate-600 italic min-h-[45px]">Materiaalit ovat pääosin kierrätettäviä ja osat ovat yhdestä materiaalista valmistettuja.</p>
+            </div>
+
+            <div class="space-y-2">
+                <div class="flex justify-between font-bold"><span>5. Pitkäikäisyys</span><span id="v5" class="text-blue-600">3</span></div>
+                <input type="range" min="1" max="5" value="3" class="slider" id="q5" oninput="update(5, this.value)">
+                <p id="d5" class="text-[15px] text-slate-600 italic min-h-[45px]">Tuote kestää käytössä pitkään ja eikä rapistu nopeasti.</p>
+            </div>
+        </div>
+
+        <button onclick="piirraKaavio()" class="w-full mt-10 bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg transition-transform active:scale-95">
+            Piirrä profiili
+        </button>
+
+        <div id="chartContainer" class="mt-12 hidden">
+            <h2 class="text-2xl font-bold text-center mb-6">Kiertotalousprofiili</h2>
+            <canvas id="radarChart"></canvas>
+        </div>
+    </div>
+
+    <script>
+        const lauseet = {
+            1: [
+                "Tuotteen purkaminen onnistuu vain hajottamalla.",
+                "Tuotteen purkaminen on hidasta, työlästä ja vaatii paljon työvaiheita.",
+                "Tuotteen purkaminen onnistuu kohtuullisella työkaluvalikoimalla.",
+                "Tuotteen purkaminen on sujuvaa, mutta purku saattaa vaatia useampia vaiheita.",
+                "Purku on nopeaa ja kriittisiin osiin pääsee suoraan käsiksi."
+            ],
+            2: [
+                "Tuotteen huolto on mahdotonta.",
+                "Tuotteen huolto on hidasta ja työlästä. Kriittisiin osiin on vaikea päästä käsiksi, ja huolto voi vaatia paljon purkamista, erikoistyökaluja tai erityisosaamista.",
+                "Tuotteen pinnat on helppo puhdistaa ja materiaalit kestävät puhdistuksen.",
+                "Korjaajalla on nopea ja helppo pääsy vikaantuviin osiin. Osat joilla on eri elinikä, on erotettu toisistaan.",
+                "Tuotteen kuntoa ja huollon tarvetta ennakoidaan keräämällä ja analysoimalla dataa tuotteen käytöstä ja olosuhteista."
+            ],
+            3: [
+                "Tuote toimii aikansa, mutta vikaantuessaan sen rakenteet estävät järkevän kunnostuksen ja komponenttien uudelleenkäytön.",
+                "Komponenttien irrotus ja kunnostus on hidasta, työlästä tai kallista.",
+                "Tuote on jaettu moduuleihin, jotka voidaan irrottaa, vaihtaa nopeasti uuteen ja kunnostaa erikseen.",
+                "Uudet ja vanhat komponentit ja moduulit ovat keskenään yhteensopivia eri tuotesukupolvien välillä",
+                "Moduulien ja komponenttien jäljellä oleva käyttöikä voidaan arvioida nopeasti ja luotettavasti ennen uudelleenkäyttöä."
+            ],
+            4: [
+                "Tuotteessa on materiaaliyhdistelmiä, joiden erottelu on mahdotonta.",
+                "Tuotteessa on yhdistetty eri materiaaleja niin että erottelu on hidasta.",
+                "Materiaalit ovat pääosin kierrätettäviä ja osat ovat yhdestä materiaalista valmistettuja.",
+                "Tuotteen materiaalit on helppo tunnistaa ja irrottaa erillisiksi kierrätysvaiheessa.",
+                "Kierrätystä haittaavia pinnoitteita, seoksia tai lisäaineita on vältetty, jotta materiaalivirrat säilyvät puhtaina."
+            ],
+            5: [
+                "Tuote ei ole pitkäikäinen eikä tuotteen elinkaarta ole ennakoitu.",
+                "Tuotteen elinkaarta on ennakoitu, joten tiedossa olevat muutokset (esim. teknologiset tai lainsäädännölliset) eivät tee tuotteesta ennenaikaisesti käyttökelvotonta.",
+                "Tuote kestää käytössä pitkään ja eikä rapistu nopeasti.",
+                "Tuote voidaan päivittää tulevaisuuden muuttuviin käyttäjätarpeisiin ja teknologiseen kehitykseen eikä muutu tarpeettomaksi.",
+                "Tuote on ajaton: tuotteen ulkoasu ja käyttökokemus säilyvät miellyttävinä, vaikka tuote olisi käytössä vuosikymmeniä."
+            ]
+        };
+
+        function update(qNum, val) {
+            document.getElementById('v' + qNum).innerText = val;
+            document.getElementById('d' + qNum).innerText = lauseet[qNum][val - 1];
+        }
+
+        let myChart = null;
+
+        function piirraKaavio() {
+            const container = document.getElementById('chartContainer');
+            container.classList.remove('hidden');
+            
+            const values = [1, 2, 3, 4, 5].map(i => document.getElementById('q' + i).value);
+
+            if (myChart) myChart.destroy();
+
+            const ctx = document.getElementById('radarChart').getContext('2d');
+            myChart = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['Purettavuus', 'Kunnossapito', 'Uudelleenvalmistus', 'Kierrätys', 'Pitkäikäisyys'],
+                    datasets: [{
+                        label: 'Arvioimasi tuote',
+                        data: values,
+                        backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                        borderColor: 'rgb(59, 130, 246)',
+                        borderWidth: 3,
+                        pointBackgroundColor: 'rgb(59, 130, 246)'
+                    }]
+                },
+                options: {
+                    scales: {
+                        r: { min: 0, max: 5, ticks: { stepSize: 1, display: false } }
+                    }
+                }
+            });
+
+            container.scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>
