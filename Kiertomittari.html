@@ -189,40 +189,59 @@
     });
 
 // 4. Sanallinen analyysi
-    const avg = totalScore / values.length;
-    const maxVal = Math.max(...values);
-    const minVal = Math.min(...values);
+const avg = totalScore / values.length;
+const maxVal = Math.max(...values);
+const minVal = Math.min(...values);
 
-    // Etsitään kaikki indeksit, joissa on maksimi- tai minimiarvo
-    const parhaatIndeksit = values.map((v, i) => v === maxVal ? i : -1).filter(i => i !== -1);
-    
-    // Suodatetaan heikoimmat: otetaan mukaan vain jos arvosana on alle 4
-    const heikoimmatIndeksit = values.map((v, i) => v === minVal ? i : -1)
-                                     .filter(i => i !== -1 && values[i] < 4);
+// Etsitään indeksit
+const parhaatIndeksit = values.map((v, i) => v === maxVal ? i : -1).filter(i => i !== -1);
+const heikoimmatIndeksit = values.map((v, i) => v === minVal ? i : -1)
+                                 .filter(i => i !== -1 && values[i] < 4);
 
-    const vinkit = [
+// --- UUSI LOGIIKKA ALKAA ---
+
+// Näytetään vahvuudet vain, jos ne ovat oikeasti parempia kuin heikoimmat kohdat
+// TAI jos heikoimpia kohtia ei ole ollenkaan (kaikki 4 tai 5)
+const naytaVahvuudet = maxVal > minVal || heikoimmatIndeksit.length === 0;
+
+let vahvuusHTML = "";
+if (naytaVahvuudet) {
+    const parhaatNimet = parhaatIndeksit.map(i => labels[i]).join(", ");
+    vahvuusHTML = `${parhaatNimet} (arvosana ${maxVal}/5).`;
+} else {
+    vahvuusHTML = "Tuotteen osa-alueet ovat tasavahvoja. Keskity kehittämään alla olevia kohteita nostaaksesi kiertotalousastetta.";
+}
+
+// Piilotetaan tai näytetään vahvuus-laatikko tarvittaessa
+const strengthBox = document.getElementById('strengthText').parentElement;
+// --- UUSI LOGIIKKA PÄÄTTYY ---
+
+const vinkit = [
         "Suunnittele tuote helposti purettavaksi. Purkamiseen vaikuttavat erityisesti komponenttien liitokset ja tuotearkkitehtuuri.",
         "Kunnossapidon kannalta ratkaisevat päätökset tehdään tuotteen suunnitteluvaiheessa. Esimerkiksi puhdistettavien ja vikaherkiksi tiedettyjen osien tulee olla helposti saavutettavia, ja materiaalien on kestettävä toistuvia huoltotoimenpiteitä. Eri elinkaaren omaavat komponentit kannattaa erottaa toisistaan esimerkiksi huoltomoduuleiksi.",
         "Harkitulla suunnittelulla tuotteesta saadaan mahdollisimman paljon irti uudelleenvalmistukseen: ryhmittele komponentit moduuleiksi huoltotarpeen ja vanhenemisrytmin mukaan ja varmista että komponentit ovat yhteensopivia sekä aiempiin että tuleviin tuotesukupolviin",
         "Suosi suunnittelussa kierrätettäviä materiaaleja ja yhdestä materiaalista valmistettuja, pinnoittamattomia osia. Varmista että materiaali on helposti tunnistettavissa. Käytä kiinnittimiä, jotka ovat samaa materiaalia kuin kiinnitettävä osa.",
         "Pitkäikäisyys on kiertotalouden kannalta suunnittelun ensisijainen tavoite. Pitkäikäinen tuote on luotettava, kestävä ja sopeutuu tulevaisuuden muutoksiin. Panosta materiaalien laatuun ja ajattomaan muotoiluun."
-    ];
+];
 
-    const parhaatNimet = parhaatIndeksit.map(i => labels[i]).join(", ");
-    
-    // Luodaan vinkkilista heikoimmille kohdille
-    let vinkkiHTML = "";
-    if (heikoimmatIndeksit.length > 0) {
-        vinkkiHTML = `<p class="mb-2">Seuraavat osa-alueet saivat matalimman arvosanan (${minVal}/5):</p>
-                      <ul class="list-disc ml-5 space-y-1">`;
-        heikoimmatIndeksit.forEach(i => {
-            vinkkiHTML += `<li><strong>${labels[i]}:</strong> ${vinkit[i]}</li>`;
-        });
-        vinkkiHTML += `</ul>`;
-    } else {
-        // Jos kaikki arvosanat ovat 4 tai 5
-        vinkkiHTML = `<p class="text-green-700 font-medium italic">Kaikki osa-alueet ovat vähintään hyvällä tasolla! Merkittäviä kehityskohteita ei tunnistettu.</p>`;
-    }
+// Luodaan vinkkilista heikoimmille kohdille
+let vinkkiHTML = "";
+if (heikoimmatIndeksit.length > 0) {
+    vinkkiHTML = `<p class="mb-4">Seuraavat osa-alueet saivat matalimman arvosanan (${minVal}/5):</p>
+                  <ul class="list-disc ml-5 space-y-4">`;
+    heikoimmatIndeksit.forEach(i => {
+        vinkkiHTML += `<li><strong>${labels[i]}:</strong> ${vinkit[i]}</li>`;
+    });
+    vinkkiHTML += `</ul>`;
+} else {
+    vinkkiHTML = `<p class="text-green-700 font-medium italic">Kaikki osa-alueet ovat vähintään hyvällä tasolla! Merkittäviä kehityskohteita ei tunnistettu.</p>`;
+}
+
+// Päivitetään UI
+document.getElementById('resultText').classList.remove('hidden');
+document.getElementById('resultSummary').innerText = yhteenveto; // (yhteenveto-logiikka säilyy ennallaan)
+document.getElementById('strengthText').innerText = vahvuusHTML;
+document.getElementById('improvementText').innerHTML = vinkkiHTML;
 
     let yhteenveto = "";
     if (avg >= 4.5) yhteenveto = "Täydellistä! Tuotteesi on kiertotalouden malliesimerkki.";
@@ -242,4 +261,5 @@
 }
     </script>
 </body>
+
 </html>
