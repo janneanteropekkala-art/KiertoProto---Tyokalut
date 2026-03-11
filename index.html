@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KiertoProto - Kiertomittari&trade;</title>
+    <title>Kiertomittari: Elinkaari</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
     <style>
         .slider { -webkit-appearance: none; width: 100%; height: 8px; border-radius: 5px; background: #e2e8f0; outline: none; }
         .slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 22px; height: 22px; border-radius: 50%; background: #3b82f6; cursor: pointer; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
@@ -14,38 +15,39 @@
 <body class="bg-slate-50 py-10 px-4 text-slate-800">
 
     <div class="max-w-xl mx-auto bg-white p-8 rounded-3xl shadow-xl border border-slate-100">
-        <h1 class="text-3xl font-black text-center text-slate-900 mb-2">Kiertomittari&trade;</h1>
-        <p class="text-center text-slate-500 mb-10">Testaa, kuinka hyvin tuote ja kiertotalous kohtaavat. Valitse tuotettasi parhaiten kuvaava väittämä.</p>
+        <h1 class="text-3xl font-black text-center text-slate-900 mb-2">Kiertomittari: Elinkaari</h1>
+        <p class="text-center text-slate-500 mb-10">Arvioi tuotteen teknistä kestävyyttä ja elinkaaren pituutta. Valitse tuotettasi parhaiten kuvaava väittämä.</p>
 
         <div class="space-y-8">
+            <!-- Kysymykset -->
             <div class="space-y-2">
                 <div class="flex justify-between font-bold"><span>1. Purettavuus</span><span id="v1" class="text-blue-600">3</span></div>
                 <input type="range" min="1" max="5" value="3" class="slider" id="q1" oninput="update(1, this.value)">
-                <p id="d1" class="text-[15px] text-slate-600 italic min-h-[45px]">Tuotteen purkaminen onnistuu kohtuullisella työkaluvalikoimalla.</p>
+                <p id="d1" class="text-base text-slate-600 italic min-h-[45px]">Tuotteen purkaminen onnistuu kohtuullisella työkaluvalikoimalla.</p>
             </div>
             
             <div class="space-y-2">
                 <div class="flex justify-between font-bold"><span>2. Kunnossapito</span><span id="v2" class="text-blue-600">3</span></div>
                 <input type="range" min="1" max="5" value="3" class="slider" id="q2" oninput="update(2, this.value)">
-                <p id="d2" class="text-[15px] text-slate-600 italic min-h-[45px]">Tuotteen pinnat on helppo puhdistaa ja materiaalit kestävät puhdistuksen.</p>
+                <p id="d2" class="text-base text-slate-600 italic min-h-[45px]">Kriittiset huoltokohteet ovat saavutettavissa tavallisilla työkaluilla. Pinnat ovat pääosin sileitä ja materiaalit kestävät puhdistuksen.</p>
             </div>
 
             <div class="space-y-2">
                 <div class="flex justify-between font-bold"><span>3. Uudelleenvalmistus</span><span id="v3" class="text-blue-600">3</span></div>
                 <input type="range" min="1" max="5" value="3" class="slider" id="q3" oninput="update(3, this.value)">
-                <p id="d3" class="text-[15px] text-slate-600 italic min-h-[45px]">Tuote on jaettu moduuleihin, jotka voidaan irrottaa, vaihtaa nopeasti uuteen ja kunnostaa erikseen.</p>
+                <p id="d3" class="text-base text-slate-600 italic min-h-[45px]">Tuote on jaettu moduuleihin, jotka voidaan irrottaa, vaihtaa uuteen ja kunnostaa erikseen.</p>
             </div>
 
             <div class="space-y-2">
                 <div class="flex justify-between font-bold"><span>4. Kierrätys</span><span id="v4" class="text-blue-600">3</span></div>
                 <input type="range" min="1" max="5" value="3" class="slider" id="q4" oninput="update(4, this.value)">
-                <p id="d4" class="text-[15px] text-slate-600 italic min-h-[45px]">Materiaalit ovat pääosin kierrätettäviä ja osat ovat yhdestä materiaalista valmistettuja.</p>
+                <p id="d4" class="text-base text-slate-600 italic min-h-[45px]">Materiaalit ovat pääosin kierrätettäviä ja osat ovat yhdestä materiaalista valmistettuja.</p>
             </div>
 
             <div class="space-y-2">
                 <div class="flex justify-between font-bold"><span>5. Pitkäikäisyys</span><span id="v5" class="text-blue-600">3</span></div>
                 <input type="range" min="1" max="5" value="3" class="slider" id="q5" oninput="update(5, this.value)">
-                <p id="d5" class="text-[15px] text-slate-600 italic min-h-[45px]">Tuote kestää käytössä pitkään ja eikä rapistu nopeasti.</p>
+                <p id="d5" class="text-base text-slate-600 italic min-h-[45px]">Tuote kestää käytössä pitkään ja eikä rapistu nopeasti.</p>
             </div>
         </div>
 
@@ -53,9 +55,36 @@
             Piirrä profiili
         </button>
 
-        <div id="chartContainer" class="mt-12 hidden">
-            <h2 class="text-2xl font-bold text-center mb-6">Kiertotalousprofiili</h2>
-            <canvas id="radarChart"></canvas>
+        <div id="chartContainer" class="mt-12 hidden text-center">
+            <h2 class="text-2xl font-bold mb-4">Tuloksesi</h2>
+            
+            <p class="text-xl font-bold mb-6 text-slate-700 text-center">
+                Sait <span id="scoreValue" class="text-5xl font-black transition-all duration-500 inline-block w-full">0</span>/25 pistettä!
+            </p>
+
+            <div class="relative mb-8">
+                <canvas id="radarChart"></canvas>
+            </div>
+
+            <!-- Analyysiosio -->
+            <div id="resultText" class="mt-8 p-8 bg-blue-50 rounded-2xl border border-blue-100 hidden text-left">
+                <h3 class="text-2xl font-bold mb-4 text-blue-900">Yhteenveto</h3>
+                <p class="text-slate-700 mb-8 font-medium text-lg border-b border-blue-100 pb-4" id="resultSummary"></p>
+                
+                <div class="grid grid-cols-1 gap-6 text-left">
+                    <!-- Vahvuudet -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                        <strong class="text-green-700 block mb-2 uppercase tracking-wider text-base font-bold">Vahvuudet</strong>
+                        <div id="strengthText" class="text-slate-600 leading-relaxed"></div>
+                    </div>
+                    
+                    <!-- Kehityskohteet -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                        <strong class="text-amber-700 block mb-2 uppercase tracking-wider text-base font-bold">Kehityskohteet</strong>
+                        <div id="improvementText" class="text-slate-600 leading-relaxed"></div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -69,17 +98,17 @@
                 "Purku on nopeaa ja kriittisiin osiin pääsee suoraan käsiksi."
             ],
             2: [
-                "Tuotteen huolto on mahdotonta.",
-                "Tuotteen huolto on hidasta ja työlästä. Kriittisiin osiin on vaikea päästä käsiksi, ja huolto voi vaatia paljon purkamista, erikoistyökaluja tai erityisosaamista.",
-                "Tuotteen pinnat on helppo puhdistaa ja materiaalit kestävät puhdistuksen.",
-                "Korjaajalla on nopea ja helppo pääsy vikaantuviin osiin. Osat joilla on eri elinikä, on erotettu toisistaan.",
-                "Tuotteen kuntoa ja huollon tarvetta ennakoidaan keräämällä ja analysoimalla dataa tuotteen käytöstä ja olosuhteista."
+                "Tuotteen huoltaminen mahdotonta. Puhdistusyritykset vaurioittavat tuotetta.",
+                "Huoltokohteisiin pääsy on vaikeaa ja vaatii purkamista ja erikoistyökaluja. Tuotteen pintoja on vaikea puhdistaa.",
+                "Kriittiset huoltokohteet ovat saavutettavissa tavallisilla työkaluilla. Pinnat ovat pääosin sileitä ja materiaalit kestävät puhdistuksen.",
+                "Huoltaminen on nopeaa ja mahdollista paikan päällä. Osat joilla on eri elinikä ja puhdistuskemikaalit, on erotettu toisistaan.",
+                "Tuote monitoroi omaa kuntoaan. Huolto ja päivitykset voidaan tehdä optimaalisesti oikeaan aikaan."
             ],
             3: [
                 "Tuote toimii aikansa, mutta vikaantuessaan sen rakenteet estävät järkevän kunnostuksen ja komponenttien uudelleenkäytön.",
                 "Komponenttien irrotus ja kunnostus on hidasta, työlästä tai kallista.",
-                "Tuote on jaettu moduuleihin, jotka voidaan irrottaa, vaihtaa nopeasti uuteen ja kunnostaa erikseen.",
-                "Uudet ja vanhat komponentit ja moduulit ovat keskenään yhteensopivia eri tuotesukupolvien välillä",
+                "Tuote on jaettu moduuleihin, jotka voidaan irrottaa, vaihtaa uuteen ja kunnostaa erikseen.",
+                "Komponentit ja moduulit ovat keskenään yhteensopivia eri tuotesukupolvien välillä.",
                 "Moduulien ja komponenttien jäljellä oleva käyttöikä voidaan arvioida nopeasti ja luotettavasti ennen uudelleenkäyttöä."
             ],
             4: [
@@ -91,9 +120,9 @@
             ],
             5: [
                 "Tuote ei ole pitkäikäinen eikä tuotteen elinkaarta ole ennakoitu.",
-                "Tuotteen elinkaarta on ennakoitu, joten tiedossa olevat muutokset (esim. teknologiset tai lainsäädännölliset) eivät tee tuotteesta ennenaikaisesti käyttökelvotonta.",
+                "Tuotteen elinkaarta on ennakoitu, joten tiedossa olevat muutokset (esim. teknologiset tai lainsäädännölliset) eivät tee tuosta ennenaikaisesti käyttökelvotonta.",
                 "Tuote kestää käytössä pitkään ja eikä rapistu nopeasti.",
-                "Tuote voidaan päivittää tulevaisuuden muuttuviin käyttäjätarpeisiin ja teknologiseen kehitykseen eikä muutu tarpeettomaksi.",
+                "Tuote voidaan tulevaisuudessa päivittää vastaamaan muuttuvia käyttäjien tarpeita ja ajantasaista teknologiaa.",
                 "Tuote on ajaton: tuotteen ulkoasu ja käyttökokemus säilyvät miellyttävinä, vaikka tuote olisi käytössä vuosikymmeniä."
             ]
         };
@@ -109,30 +138,127 @@
             const container = document.getElementById('chartContainer');
             container.classList.remove('hidden');
             
-            const values = [1, 2, 3, 4, 5].map(i => document.getElementById('q' + i).value);
+            const values = [1, 2, 3, 4, 5].map(i => parseInt(document.getElementById('q' + i).value));
+            const totalScore = values.reduce((a, b) => a + b, 0);
+            const labels = ['Purettavuus', 'Kunnossapito', 'Uudelleenvalmistus', 'Kierrätys', 'Pitkäikäisyys'];
 
+            // Pistenäyttö ja värivalinta
+            const scoreElement = document.getElementById('scoreValue');
+            scoreElement.innerText = totalScore;
+            scoreElement.className = "text-5xl font-black transition-all duration-500 inline-block w-full text-center";
+
+            let chartColor = 'rgb(59, 130, 246)'; 
+            let chartBg = 'rgba(59, 130, 246, 0.2)';
+
+            if (totalScore <= 9) {
+                scoreElement.classList.add("text-red-600");
+                chartColor = 'rgb(220, 38, 38)';
+                chartBg = 'rgba(220, 38, 38, 0.2)';
+            } else if (totalScore >= 21) {
+                scoreElement.classList.add("text-green-600");
+                chartColor = 'rgb(22, 163, 74)';
+                chartBg = 'rgba(22, 163, 74, 0.2)';
+                confetti({
+                    particleCount: 150,
+                    spread: 70,
+                    origin: { y: 0.6 },
+                    colors: ['#16a34a', '#3b82f6', '#fbbf24']
+                });
+            } else if (totalScore >= 10 && totalScore <= 13) {
+                scoreElement.classList.add("text-orange-500");
+                chartColor = 'rgb(249, 115, 22)';
+                chartBg = 'rgba(249, 115, 22, 0.2)';
+            } else if (totalScore >= 14 && totalScore <= 17) {
+                scoreElement.classList.add("text-blue-600");
+                chartColor = 'rgb(37, 99, 235)';
+                chartBg = 'rgba(37, 99, 235, 0.2)';
+            } else {
+                scoreElement.classList.add("text-teal-500");
+                chartColor = 'rgb(20, 184, 166)';
+                chartBg = 'rgba(20, 184, 166, 0.2)';
+            }
+
+            // Radar Chart
             if (myChart) myChart.destroy();
-
             const ctx = document.getElementById('radarChart').getContext('2d');
             myChart = new Chart(ctx, {
                 type: 'radar',
                 data: {
-                    labels: ['Purettavuus', 'Kunnossapito', 'Uudelleenvalmistus', 'Kierrätys', 'Pitkäikäisyys'],
+                    labels: labels,
                     datasets: [{
-                        label: 'Arvioimasi tuote',
+                        label: 'Elinkaari-profiili',
                         data: values,
-                        backgroundColor: 'rgba(59, 130, 246, 0.2)',
-                        borderColor: 'rgb(59, 130, 246)',
+                        backgroundColor: chartBg,
+                        borderColor: chartColor,
                         borderWidth: 3,
-                        pointBackgroundColor: 'rgb(59, 130, 246)'
+                        pointBackgroundColor: chartColor
                     }]
                 },
                 options: {
-                    scales: {
-                        r: { min: 0, max: 5, ticks: { stepSize: 1, display: false } }
-                    }
+                    scales: { 
+                        r: { 
+                            min: 0, 
+                            max: 5, 
+                            ticks: { stepSize: 1, display: false },
+                            pointLabels: {
+                                font: {
+                                    weight: 'bold'
+                                }
+                            }
+                        } 
+                    },
+                    plugins: { legend: { display: false } }
                 }
             });
+
+            // Analyysilogiikka
+            const avg = totalScore / values.length;
+            const maxVal = Math.max(...values);
+            const minVal = Math.min(...values);
+
+            const parhaatIndeksit = values.map((v, i) => v === maxVal ? i : -1).filter(i => i !== -1);
+            const heikoimmatIndeksit = values.map((v, i) => v === minVal ? i : -1).filter(i => i !== -1 && values[i] < 4);
+
+            const vinkit = [
+                "Suunnittele tuote helposti purettavaksi. Purkamiseen vaikuttavat erityisesti komponenttien liitokset ja tuotearkkitehtuuri.",
+                "Kunnossapidon kannalta ratkaisevat päätökset tehdään tuotteen suunnitteluvaiheessa. Esimerkiksi puhdistettavien ja vikaherkiksi tiedettyjen osien tulee olla helposti saavutettavia. Eri elinkaaren omaavat komponentit kannattaa erottaa toisistaan.",
+                "Harkitulla suunnittelulla tuotteesta saadaan mahdollisimman paljon irti uudelleenvalmistukseen: ryhmittele komponentit moduuleiksi ja varmista yhteensopivuus eri tuotesukupolvien välillä.",
+                "Suosi suunnittelussa kierrätettäviä materiaaleja ja yhdestä materiaalista valmistettuja, pinnoittamattomia osia. Varmista helppo tunnistettavuus.",
+                "Pitkäikäisyys on suunnittelun ensisijainen tavoite. Pitkäikäinen tuote on luotettava, kestävä ja sopeutuu tulevaisuuden muutoksiin."
+            ];
+
+            const naytaVahvuudet = maxVal > minVal || heikoimmatIndeksit.length === 0;
+            let vahvuusHTML = "";
+            if (naytaVahvuudet) {
+                const parhaatNimet = parhaatIndeksit.map(i => labels[i]).join(", ");
+                vahvuusHTML = `${parhaatNimet} (arvosana ${maxVal}/5).`;
+            } else {
+                vahvuusHTML = "Tuotteen osa-alueet ovat tällä hetkellä tasavahvoja. Keskity kehittämään alla olevia kohteita nostaaksesi kiertotalousastetta.";
+            }
+
+            let vinkkiHTML = "";
+            if (heikoimmatIndeksit.length > 0) {
+                vinkkiHTML = `<p class="mb-4">Seuraavat osa-alueet saivat matalimman arvosanan (${minVal}/5):</p>
+                              <ul class="list-disc ml-5 space-y-4">`;
+                heikoimmatIndeksit.forEach(i => {
+                    vinkkiHTML += `<li><strong>${labels[i]}:</strong> ${vinkit[i]}</li>`;
+                });
+                vinkkiHTML += `</ul>`;
+            } else {
+                vinkkiHTML = `<p class="text-green-700 font-medium italic">Kaikki osa-alueet ovat vähintään hyvällä tasolla! Merkittäviä kehityskohteita ei tunnistettu.</p>`;
+            }
+
+            let yhteenveto = "";
+            if (avg >= 4.5) yhteenveto = "Täydellistä! Tuotteesi on kiertotalouden malliesimerkki.";
+            else if (avg >= 4) yhteenveto = "Erinomaista! Tuotteesi on suunniteltu kiertotalouden huipulle.";
+            else if (avg >= 3) yhteenveto = "Hyvä taso. Tuotteessa on vahva perusta, mutta optimointivaraa löytyy vielä.";
+            else if (avg >= 2) yhteenveto = "Kehitettävää löytyy. Tuote on vielä lähellä perinteistä lineaarista mallia.";
+            else yhteenveto = "Tuotteen kiertotalouspotentiaali on matala. Suunnittelu noudattaa perinteistä lineaarista mallia (osta-valmista-hävitä), mikä estää resurssien tehokkaan kierron.";
+
+            document.getElementById('resultText').classList.remove('hidden');
+            document.getElementById('resultSummary').innerText = yhteenveto;
+            document.getElementById('strengthText').innerText = vahvuusHTML;
+            document.getElementById('improvementText').innerHTML = vinkkiHTML;
 
             container.scrollIntoView({ behavior: 'smooth' });
         }
